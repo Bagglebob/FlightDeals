@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Flight Scraper Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        label {
+            display: block;
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.3rem;
+            font-size: 1rem;
+        }
+        button {
+            margin-top: 1.5rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #e0ffe0;
+            border: 1px solid #70c470;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flight Scraper</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Scrape Flights</button>
+    </form>
+
+    {% if result %}
+        <div class="result">
+            <h2>Scraping Result:</h2>
+            <pre>{{ result }}</pre>
+        </div>
+    {% endif %}
+</body>
+</html>
