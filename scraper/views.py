@@ -11,6 +11,10 @@ class FlightForm(forms.Form):
         label="Departure Date",
         widget=forms.DateInput(attrs={'type': 'date'})
     )
+    return_date = forms.DateField(
+        label="Return Date",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
 
 
 def form_view(request):
@@ -20,7 +24,14 @@ def form_view(request):
         if form.is_valid():
             # You can process the data here
             result = form.cleaned_data  # For demonstration
-            run_scraper(result["departure_date"].strftime("%Y-%m-%d"))
+            deals = run_scraper(result["departure_date"].strftime("%Y-%m-%d"), result["return_date"].strftime("%Y-%m-%d"), result["origin"], result["destination"])
+            return render(request, 'flightDeals.html')
+            # return render(request, 'flightDeals.html', {'deals': deals})
     else:
         form = FlightForm()
     return render(request, 'form.html', {'form': form, 'result': result})
+
+
+def flightDealsView(request):
+    template = loader.get_template('flightDeals.html')
+    return render(request, 'flightDeals.html', {'template': template})
