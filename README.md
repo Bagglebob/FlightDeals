@@ -126,7 +126,9 @@ Main function to execute the scraping process.
 - **Parameters:** `flight_deals` - List of raw flight deal dictionaries (output of `extractFlightDeals`).
 
 - **Returns:** List of parsed deals with structure:
-  ```python
+
+  
+```python
 # {
 #   "price": "C$ 1,325",
 #   "deal_link": "https://www.cheapflights.ca/book/flight?code=kfHiO9Zlst.tYUOhBwwtNbTYwQ_VUUUMA.96956.9629bf90967b6638afcd0c4d3a856def&h=1656983adc02&sub=F-3276301010609040527E0d6192e0ae2&bucket=e&pageOrigin=F..RP.FE.M5",
