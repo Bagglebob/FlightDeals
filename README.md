@@ -4,15 +4,22 @@ This Python script uses Selenium to scrape round-trip flight deals from [cheapfl
 
 ---
 
+## Screenshots
+![Search Form](image.png)
+
+![Results of Search](image-1.png)
+
+![Live Demo](videoDemoEdited-ezgif.com-video-to-gif-converter.gif)
+
 ## Overview
 
-- Automates browser interaction using Selenium with stealth settings to avoid detection.
+- Automates browser interaction using Selenium
 - Inputs origin, destination, departure date, and return date on the website.
 - Navigates calendar widget on [cheapflights.ca](https://www.cheapflights.ca/) to select dates.
 - Submits the search and waits for results.
 - Extracts flight deal details from the search results page.
 - Parses raw text data into structured dictionaries.
-- Returns a list of parsed flight deals with info about Departure Trip and Return Trip.
+- Returns a list of parsed flight deals with info about Departure Trip and Return Trip, as well as a link to the deal.
 
 ---
 
