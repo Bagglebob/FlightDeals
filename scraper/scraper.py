@@ -13,22 +13,22 @@ from selenium.common.exceptions import TimeoutException,StaleElementReferenceExc
 
 def run_scraper(selected_date, return_date, origin="Toronto", destination="Dubai"):
     dt = datetime.strptime(selected_date, "%Y-%m-%d")
-    print("Selected date:", dt.strftime("%Y-%m-%d"))
+    
     
     # Format as "Month Year" (e.g., "December 2025")
     target_caption = dt.strftime("%B %Y")
-    print("Target caption:", target_caption)
+   
 
     # Format as "1 July, 2025"
     formatted_date = dt.strftime("%#d %B, %Y")
-    print("Formatted date for selection:", formatted_date)
+    
 
     returnDate = datetime.strptime(return_date,"%Y-%m-%d").strftime("%#d %B, %Y")
-    print("Formatted Return date:", returnDate)
+    
 
     options = Options()
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-
+    options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
     stealth(
         driver,
@@ -48,11 +48,7 @@ def run_scraper(selected_date, return_date, origin="Toronto", destination="Dubai
        
 
     searchForm = findSearchForm(driver)
-    print("Main Search Form elements:")
-    for i in searchForm:
-        print(i.tag_name, i.get_attribute("name"), i.get_attribute("aria-label"))
-
-
+    
 
     # find elements for Flight origin input and Flight destination input
     # inputs = searchForm[0].find_elements(By.TAG_NAME, "input")
@@ -98,30 +94,22 @@ def run_scraper(selected_date, return_date, origin="Toronto", destination="Dubai
             c.get_attribute("class")
         )
 
-    # Select Next and Previous month buttons
-    # prevButton = calendar[0].find_element(By.CSS_SELECTOR, '[aria-label="Previous month"]')
-    # nextButton = calendar[0].find_element(By.CSS_SELECTOR, '[aria-label="Next month"]')
-
-    # print(prevButton.get_attribute("aria-label"))
-    # print(nextButton.get_attribute("aria-label"))
-
-    # caption = calendar[0].find_element(By.CSS_SELECTOR, "table caption")
-    # month_text = caption.text
-    # print("Current Month Shown in Calendar:", month_text)
-
-    # change month (next month until caption == month)
-    # while(calendar[0].find_element(By.CSS_SELECTOR, "table caption").text != target_caption):
-    #     nextButton.click()
+    
     selectDeptDate(driver, target_caption, formatted_date, returnDate)
 
     submitSearch(driver)
 
-    
-    print(extractFlightDeals(driver))
-    time.sleep(10)
+    time.sleep(5)  # Wait for results to load
+    # Extract flight deals
+    flightDeals = extractFlightDeals(driver)
+    print("UNPARSED DEALS:",flightDeals,"UNPARSED DEALS DONE!!\n")
+    parsedDeals = parseDealData(flightDeals)
+    print("PARSED Deals:", parsedDeals,"PARSED DEALS DONE!!\n")
     # clean up and close the driver
     driver.quit()
-
+    return parsedDeals
+    
+        
 
 def findSearchForm(driver):
     try:
@@ -137,8 +125,7 @@ def findSearchForm(driver):
 def findInputElements(searchForm):
     try:
         inputs = searchForm[0].find_elements(By.TAG_NAME, "input")
-        for i in inputs:
-            print(i.get_attribute("name"), i.get_attribute("aria-label"))
+       
         return inputs
     except Exception as e:
         print("Error finding input elements:", e)
@@ -149,7 +136,7 @@ def findDepartureDateElement(driver):
         departureDate = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "[aria-label='Departure date']"))
         )
-        print(departureDate.get_attribute("aria-label"))
+        
         return departureDate
     except Exception as e:
         print("Error finding departure date element:", e)
@@ -161,24 +148,16 @@ def selectDeptDate(driver, target_date, formatted_date, returnDate):
         EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[aria-label='Select start date from calendar input']"))
     )
 
-    for c in calendar:
-        print(
-            "Calendar class name:",        
-            c.get_attribute("aria-label"),
-            c.get_attribute("class")
-        )
 
     # Select Next and Previous month buttons
     prevButton = calendar[0].find_element(By.CSS_SELECTOR, '[aria-label="Previous month"]')
     nextButton = calendar[0].find_element(By.CSS_SELECTOR, '[aria-label="Next month"]')
 
-    print(prevButton.get_attribute("aria-label"))
-    print(nextButton.get_attribute("aria-label"))
-
+    
     
     month_text = calendar[0].find_element(By.CSS_SELECTOR, "table caption").text.strip()
     
-    print("Current Month Shown in Calendar:", month_text)
+    # change month (next month until caption == month)
     while(calendar[0].find_element(By.CSS_SELECTOR, "table caption").text != target_date):
         nextButton.click()
         WebDriverWait(driver, 2).until(
@@ -187,7 +166,6 @@ def selectDeptDate(driver, target_date, formatted_date, returnDate):
     month_text = calendar[0].find_element(By.CSS_SELECTOR, "table caption").text.strip()
     
     dateButton = calendar[0].find_element(By.XPATH, f".//div[starts-with(@aria-label, '{formatted_date}')]")
-    print("Date Button found:", dateButton.get_attribute("aria-label"), dateButton.get_attribute("role"))
     dateButton.click()
     
       
@@ -196,7 +174,7 @@ def selectDeptDate(driver, target_date, formatted_date, returnDate):
     #     EC.presence_of_all_elements_located((By.XPATH, f".//div[starts-with(@aria-label, '{returnDate}')]"))
     # )
     
-    print("Return Date Button found:", returnDate.get_attribute("aria-label"), returnDate.get_attribute("role"))
+    
     time.sleep(2)  # Wait for the date to be selected
     returnDate.click()    
 
@@ -226,32 +204,23 @@ def extractFlightDeals(driver):
                 price_elem = WebDriverWait(driver, 3).until(
                     lambda d: deal.find_element(By.CSS_SELECTOR, "div[class*='price-text']")
                 )
-                print("Price found:", price_elem.text)
+                # print("Price found:", price_elem.text)
                 price = price_elem.text.strip()
 
                 # Extract and print the deal link
                 # Extract the <a> tag href inside the price section
                 link_elem = deal.find_element(By.CSS_SELECTOR, "div[class*='price-section'] a")
                 deal_link = link_elem.get_attribute("href")
-                print("Deal link:", deal_link)
+               
 
                 # scope to content-section inside this one deal, and extract the departure airport
                 contentSection = WebDriverWait(driver, 10).until(
                     lambda d: deal.find_elements(By.CSS_SELECTOR, 'div[class*="content-section"]')
                 )
-                print("Content section found:", len(contentSection), "elements")
+               
                 # Extract airport codes from within the content-section
                 try:
-                    airport_blocks = contentSection[0].find_elements(By.CSS_SELECTOR, 'div[class*="full-airport"]')
-                    print("Airport blocks found:", len(airport_blocks))
                     
-
-                    # OLD CODE: Uncomment to print legs details
-                    # legs = contentSection[0].find_elements(By.CSS_SELECTOR, "ol > li")
-                    # print("Legs found:", len(legs))
-                    # for leg in legs:
-                    #     print("Leg details:\"", leg.text.strip().split('\n'), "\"")
-
                     legs_data = []
                     try:
                         legs = contentSection[0].find_elements(By.CSS_SELECTOR, "ol > li")
@@ -269,9 +238,6 @@ def extractFlightDeals(driver):
                         "legs": legs_data
                     }
                     flight_deals.append(deal_obj)
-
-                    
-                    
                 except Exception as e:
                     print("Error extracting airport info:", e)
             except TimeoutException:
@@ -280,5 +246,78 @@ def extractFlightDeals(driver):
                 print("Deal became stale, skipping or retrying.")
     except Exception as e:
         print("Error extracting flight deals:", e)
-    
+    # driver.quit()
     return flight_deals
+
+
+# {
+#   "price": "C$ 1,325",
+#   "deal_link": "https://www.cheapflights.ca/book/flight?code=kfHiO9Zlst.tYUOhBwwtNbTYwQ_VUUUMA.96956.9629bf90967b6638afcd0c4d3a856def&h=1656983adc02&sub=F-3276301010609040527E0d6192e0ae2&bucket=e&pageOrigin=F..RP.FE.M5",
+#   "legs": {
+#     "departure": {
+#       "FlightTime": "11:00 pm – 7:45 pm",
+#       "ArrivesNxtDay": "+1",
+#       "DepartAirline": "JFKJohn F Kennedy Intl",
+#       "ArriveAirline": "DXBDubai Intl",
+#       "Layover": "direct",
+#       "TotalTime": "12h 45m"
+#     },
+#     "arrival": {
+#       "FlightTime": "8:30 am – 2:25 pm",
+#       "DepartAirline": "DXBDubai Intl",
+#       "ArriveAirline": "JFKJohn F Kennedy Intl",
+#       "Layover": "direct",
+#       "TotalTime": "13h 55m"
+#     }
+#   }
+# }
+
+
+
+def parseDealData(flight_deals):
+    result = []
+
+    for deal in flight_deals:
+        if "legs" not in deal or not deal["legs"]:
+            continue
+
+        legs = deal["legs"]
+        parsed = {
+            "price": deal["price"],
+            "deal_link": deal["deal_link"],
+            "legs": {}
+        }
+
+        # Parse departure leg
+        if len(legs) > 0:
+            leg = legs[0]
+            dep = {
+                "FlightTime": leg[0],
+                "ArrivesNxtDay": "+1" if "+1" in leg else "",
+                "DepartAirline": leg[2] if len(leg) > 2 else "",
+                "ArriveAirline": leg[3] if len(leg) > 3 else "",
+                "Layover": leg[4] if len(leg) > 4 else "",
+                "Stopover": leg[5] if len(leg) > 5 and "layover" not in leg[5] else "",
+                "LayoverDuration": leg[6] if len(leg) > 6 and "layover" in leg[6] else "",
+                "TotalTime": leg[-1]  # always at end
+            }
+            parsed["legs"]["departure"] = dep
+
+        # Parse return leg
+        if len(legs) > 1:
+            leg = legs[1]
+            arr = {
+                "FlightTime": leg[0],
+                "ArrivesNxtDay": "+1" if "+1" in leg else "",
+                "DepartAirline": leg[2] if "+1" in leg else leg[1],
+                "ArriveAirline": leg[3] if "+1" in leg else leg[2],
+                "Layover": leg[4] if "+1" in leg else leg[3],
+                "Stopover": leg[4] if len(leg) > 4 and "layover" not in leg[4] else "",
+                "LayoverDuration": leg[5] if len(leg) > 5 and "layover" in leg[5] else "",
+                "TotalTime": leg[-1]  # always at end
+            }
+            parsed["legs"]["arrival"] = arr
+
+        result.append(parsed)
+
+    return result

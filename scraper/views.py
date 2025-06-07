@@ -25,8 +25,8 @@ def form_view(request):
             # You can process the data here
             result = form.cleaned_data  # For demonstration
             deals = run_scraper(result["departure_date"].strftime("%Y-%m-%d"), result["return_date"].strftime("%Y-%m-%d"), result["origin"], result["destination"])
-            return render(request, 'flightDeals.html')
-            # return render(request, 'flightDeals.html', {'deals': deals})
+            # return render(request, 'flightDeals.html')
+            return render(request, 'flightDeals.html', {'deals': deals})
     else:
         form = FlightForm()
     return render(request, 'form.html', {'form': form, 'result': result})
