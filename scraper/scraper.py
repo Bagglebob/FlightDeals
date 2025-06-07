@@ -83,16 +83,16 @@ def run_scraper(selected_date, return_date, origin="Toronto", destination="Dubai
 
     
     # Select Calendar Div
-    calendar = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[aria-label='Select start date from calendar input']"))
-    )
+    # calendar = WebDriverWait(driver, 10).until(
+    #     EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[aria-label='Select start date from calendar input']"))
+    # )
 
-    for c in calendar:
-        print(
-            "Calendar class name:",        
-            c.get_attribute("aria-label"),
-            c.get_attribute("class")
-        )
+    # for c in calendar:
+    #     print(
+    #         "Calendar class name:",        
+    #         c.get_attribute("aria-label"),
+    #         c.get_attribute("class")
+    #     )
 
     
     selectDeptDate(driver, target_caption, formatted_date, returnDate)
@@ -122,6 +122,7 @@ def findSearchForm(driver):
         print("Error finding search form:", e)
         return None
 
+
 def findInputElements(searchForm):
     try:
         inputs = searchForm[0].find_elements(By.TAG_NAME, "input")
@@ -130,6 +131,7 @@ def findInputElements(searchForm):
     except Exception as e:
         print("Error finding input elements:", e)
         return None
+
 
 def findDepartureDateElement(driver):
     try:
@@ -142,18 +144,16 @@ def findDepartureDateElement(driver):
         print("Error finding departure date element:", e)
         return None
 
+
 def selectDeptDate(driver, target_date, formatted_date, returnDate):    
     # Select Calendar Div
     calendar = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[aria-label='Select start date from calendar input']"))
     )
 
-
     # Select Next and Previous month buttons
     prevButton = calendar[0].find_element(By.CSS_SELECTOR, '[aria-label="Previous month"]')
     nextButton = calendar[0].find_element(By.CSS_SELECTOR, '[aria-label="Next month"]')
-
-    
     
     month_text = calendar[0].find_element(By.CSS_SELECTOR, "table caption").text.strip()
     
@@ -167,13 +167,11 @@ def selectDeptDate(driver, target_date, formatted_date, returnDate):
     
     dateButton = calendar[0].find_element(By.XPATH, f".//div[starts-with(@aria-label, '{formatted_date}')]")
     dateButton.click()
-    
       
     returnDate = calendar[0].find_element(By.XPATH, f".//div[starts-with(@aria-label, '{returnDate}')]")
     # returnDate = WebDriverWait(driver, 10).until(
     #     EC.presence_of_all_elements_located((By.XPATH, f".//div[starts-with(@aria-label, '{returnDate}')]"))
     # )
-    
     
     time.sleep(2)  # Wait for the date to be selected
     returnDate.click()    
@@ -249,28 +247,6 @@ def extractFlightDeals(driver):
     # driver.quit()
     return flight_deals
 
-
-# {
-#   "price": "C$ 1,325",
-#   "deal_link": "https://www.cheapflights.ca/book/flight?code=kfHiO9Zlst.tYUOhBwwtNbTYwQ_VUUUMA.96956.9629bf90967b6638afcd0c4d3a856def&h=1656983adc02&sub=F-3276301010609040527E0d6192e0ae2&bucket=e&pageOrigin=F..RP.FE.M5",
-#   "legs": {
-#     "departure": {
-#       "FlightTime": "11:00 pm – 7:45 pm",
-#       "ArrivesNxtDay": "+1",
-#       "DepartAirline": "JFKJohn F Kennedy Intl",
-#       "ArriveAirline": "DXBDubai Intl",
-#       "Layover": "direct",
-#       "TotalTime": "12h 45m"
-#     },
-#     "arrival": {
-#       "FlightTime": "8:30 am – 2:25 pm",
-#       "DepartAirline": "DXBDubai Intl",
-#       "ArriveAirline": "JFKJohn F Kennedy Intl",
-#       "Layover": "direct",
-#       "TotalTime": "13h 55m"
-#     }
-#   }
-# }
 
 
 
